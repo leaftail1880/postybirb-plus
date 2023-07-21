@@ -25,6 +25,7 @@ export * from './interfaces/submission/post-response.interface';
 export * from './interfaces/submission/post-status.interface';
 export * from './interfaces/submission/problems.interface';
 export * from './interfaces/submission/submission-create.interface';
+export * from './interfaces/submission/submission-import.interface';
 export * from './interfaces/submission/submission-log.interface';
 export * from './interfaces/submission/submission-overwrite.interface';
 export * from './interfaces/submission/submission-package.interface';
@@ -61,9 +62,6 @@ export * from './interfaces/websites/manebooru/manebooru.file.options.interface'
 export * from './interfaces/websites/mastodon/mastodon.account.interface';
 export * from './interfaces/websites/mastodon/mastodon.file.options.interface';
 export * from './interfaces/websites/mastodon/mastodon.notification.options.interface';
-export * from './interfaces/websites/new-tumbl/new-tumbl.blog.interface';
-export * from './interfaces/websites/new-tumbl/new-tumbl.file.options.interface';
-export * from './interfaces/websites/new-tumbl/new-tumbl.notification.options.interface';
 export * from './interfaces/websites/newgrounds/newgrounds.file.options.interface';
 export * from './interfaces/websites/patreon/patreon.file.options.interface';
 export * from './interfaces/websites/patreon/patreon.notification.options.interface';
