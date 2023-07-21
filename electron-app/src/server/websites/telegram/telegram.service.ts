@@ -15,7 +15,6 @@ import {
 } from 'postybirb-commons';
 import UserAccountEntity from 'src/server/account/models/user-account.entity';
 import { PlaintextParser } from 'src/server/description-parsing/plaintext/plaintext.parser';
-import ImageManipulator from 'src/server/file-manipulation/manipulators/image.manipulator';
 import { CancellationToken } from 'src/server/submission/post/cancellation/cancellation-token';
 import {
   FilePostData,
@@ -24,7 +23,6 @@ import {
 import { PostData } from 'src/server/submission/post/interfaces/post-data.interface';
 import { ValidationParts } from 'src/server/submission/validator/interfaces/validation-parts.interface';
 import FileSize from 'src/server/utils/filesize.util';
-import FormContent from 'src/server/utils/form-content.util';
 import WaitUtil from 'src/server/utils/wait.util';
 import WebsiteValidator from 'src/server/utils/website-validator.util';
 import { GenericAccountProp } from '../generic/generic-account-props.enum';
@@ -118,7 +116,7 @@ export class Telegram extends Website {
           srp_B: string;
         }>(data.appId, 'account.getPassword', {});
 
-        const { A, M1 } = await this.instances[data.appId].crypto.getSRPParams({
+        const { A, M1 } = await (this.instances[data.appId] as any).crypto.getSRPParams({
           g,
           p,
           salt1,
@@ -524,8 +522,6 @@ export class Telegram extends Website {
         problems.push(`Telegram limits ${submission.primary.mimetype} to ${maxMB}MB`);
       }
     }
-
-    return { problems, warnings };
 
     return { problems, warnings };
   }

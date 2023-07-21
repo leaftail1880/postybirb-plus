@@ -1,24 +1,8 @@
-import {
-  Alert,
-  Anchor,
-  Button,
-  Card,
-  DatePicker,
-  Form,
-  Icon,
-  Popconfirm,
-  Spin,
-  Tooltip,
-  TreeSelect,
-  Typography,
-  Upload,
-  message
-} from 'antd';
+
 import { TreeNode } from 'antd/lib/tree-select';
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
 import _ from 'lodash';
 import { inject, observer } from 'mobx-react';
-import moment from 'moment';
 import {
   DefaultOptions,
   FileRecord,
@@ -32,21 +16,39 @@ import {
 } from 'postybirb-commons';
 import React from 'react';
 import { Match, history, withRouter } from 'react-router-dom';
-import PostService from '../../../../services/post.service';
-import RemoteService from '../../../../services/remote.service';
 import SubmissionService from '../../../../services/submission.service';
 import { headerStore } from '../../../../stores/header.store';
 import { LoginStatusStore } from '../../../../stores/login-status.store';
-import { submissionStore } from '../../../../stores/submission.store';
 import { uiStore } from '../../../../stores/ui.store';
 import SubmissionUtil from '../../../../utils/submission.util';
 import { WebsiteRegistry } from '../../../../websites/website-registry';
-import SubmissionImageCropper from '../../submission-image-cropper/SubmissionImageCropper';
-import FallbackStoryInput from '../form-components/FallbackStoryInput';
 import ImportDataSelect from '../form-components/ImportDataSelect';
 import DefaultFormSection from '../form-sections/DefaultFormSection';
 import WebsiteSections from '../form-sections/WebsiteSections';
 import { FormSubmissionPart } from '../interfaces/form-submission-part.interface';
+import moment from 'moment';
+import { submissionStore } from '../../../../stores/submission.store';
+import PostService from '../../../../services/post.service';
+import FallbackStoryInput from '../form-components/FallbackStoryInput';
+import RemoteService from '../../../../services/remote.service';
+import SubmissionImageCropper from '../../submission-image-cropper/SubmissionImageCropper';
+import {
+  Form,
+  Button,
+  Typography,
+  Spin,
+  message,
+  TreeSelect,
+  Anchor,
+  Card,
+  Upload,
+  Icon,
+  DatePicker,
+  Popconfirm,
+  Alert,
+  Tooltip
+} from 'antd';
+import { scrollSubmissionStore } from '../../../../stores/scroll-submission.store';
 
 interface Props {
   match: Match;
@@ -120,6 +122,10 @@ class SubmissionEditForm extends React.Component<Props, SubmissionEditFormState>
       });
   }
 
+  componentDidMount() {
+    scrollSubmissionStore.set(this.id);
+  }
+
   onUpdate = (updatePart: SubmissionPart<any> | Array<SubmissionPart<any>>) => {
     const parts = _.cloneDeep(this.state.parts);
     const updateParts = Array.isArray(updatePart) ? updatePart : [updatePart];
@@ -136,7 +142,11 @@ class SubmissionEditForm extends React.Component<Props, SubmissionEditFormState>
     ).then(({ data }) => this.setState({ problems: data }));
   }, 1250);
 
-  onSubmit = () => {
+  close(): void {
+    this.props.history.push(`/${this.state.submissionType}`);
+  }
+
+  onSubmit(close: boolean) {
     return new Promise(resolve => {
       if (this.state.touched || this.scheduleHasChanged()) {
         const submissionFromStore = submissionStore.getSubmission(this.id);
@@ -166,6 +176,9 @@ class SubmissionEditForm extends React.Component<Props, SubmissionEditFormState>
               touched: false
             });
             message.success('Submission was successfully saved.');
+            if (close) {
+              this.close();
+            }
           })
           .catch(() => {
             this.setState({ loading: false });
@@ -174,11 +187,19 @@ class SubmissionEditForm extends React.Component<Props, SubmissionEditFormState>
           .finally(() => resolve(void 0));
       }
     });
+  }
+
+  onClose = () => {
+    if (this.formHasChanges()) {
+      this.onSubmit(true);
+    } else {
+      this.close();
+    }
   };
 
   onPost = async (saveFirst: boolean) => {
     if (saveFirst) {
-      await this.onSubmit();
+      await this.onSubmit(false);
     }
 
     uiStore.setPendingChanges(false);
@@ -874,11 +895,19 @@ class SubmissionEditForm extends React.Component<Props, SubmissionEditFormState>
 
             <Button
               className="mr-1"
-              onClick={this.onSubmit}
+              onClick={() => this.onSubmit(false)}
               type="primary"
               disabled={!this.formHasChanges()}
             >
               Save
+            </Button>
+
+            <Button
+              className="mr-1"
+              onClick={this.onClose}
+              type={this.formHasChanges() ? 'primary' : 'default'}
+            >
+              {this.formHasChanges() ? 'Save and Close' : 'Close'}
             </Button>
 
             {isPosting ? (

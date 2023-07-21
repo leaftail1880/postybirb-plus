@@ -1,4 +1,4 @@
-import { app, clipboard, getCurrentWindow, session, shell } from '@electron/remote';
+import { app, clipboard, getCurrentWindow, session, shell, dialog } from '@electron/remote';
 import { contextBridge } from 'electron';
 
 // Authorizers
@@ -32,6 +32,11 @@ contextBridge.exposeInMainWorld('electron', {
         lastModified: Date.now(),
         type: 'image/png',
       });
+    },
+  },
+  dialog: {
+    showOpenDialog(options) {
+      return dialog.showOpenDialog(getCurrentWindow(), options || {});
     },
   },
   session: {

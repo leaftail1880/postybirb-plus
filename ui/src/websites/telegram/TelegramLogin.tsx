@@ -147,7 +147,7 @@ export default class TelegramLogin extends React.Component<LoginDialogProps, Sta
         <Modal
           visible={this.state.displayCodeDialog}
           title="Authentication Code"
-          onCancel={() => this.setState({ code: '' })}
+          onCancel={() => this.setState({ displayCodeDialog: false, code: '' })}
           onOk={() => {
             if (!this.state.code) {
               message.error('Please provide authentication code from Telegram.');

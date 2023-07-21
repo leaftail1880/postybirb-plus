@@ -15,7 +15,6 @@ import { Aryion } from './aryion/Aryion';
 import { Custom } from './custom/Custom';
 import { Newgrounds } from './newgrounds/Newgrounds';
 import { Pixiv } from './pixiv/Pixiv';
-import { NewTumbl } from './new-tumbl/NewTumbl';
 import { FurryLife } from './furry-life/FurryLife';
 import { FurryNetwork } from './furry-network/FurryNetwork';
 import { Patreon } from './patreon/Patreon';
@@ -50,7 +49,6 @@ export class WebsiteRegistry {
     KoFi: new KoFi(),
     Manebooru: new Manebooru(),
     Mastodon: new Mastodon(),
-    NewTumbl: new NewTumbl(),
     Newgrounds: new Newgrounds(),
     Patreon: new Patreon(),
     Picarto: new Picarto(),
