@@ -89,6 +89,9 @@ export * from './interfaces/websites/telegram/telegram.file.options.interface';
 export * from './interfaces/websites/telegram/telegram.notification.options.interface';
 export * from './interfaces/websites/pixelfed/pixelfed.account.interface';
 export * from './interfaces/websites/pixelfed/pixelfed.file.options.interface';
+export * from './interfaces/websites/vkontakte/vkontakte.account.interface';
+export * from './interfaces/websites/vkontakte/vkontakte.file.options.interface';
+export * from './interfaces/websites/vkontakte/vkotakte.notification.options.interface';
 
 // Models/Entities
 export * from './models/default-options.entity';

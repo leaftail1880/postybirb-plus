@@ -3,6 +3,7 @@ export interface Settings {
   emptyQueueOnFailedPost: boolean;
   postRetries: number;
   openOnLogin: boolean;
+  closeOnQuit: boolean;
   openWindowOnStartup: boolean;
   useHardwareAcceleration: boolean;
   maxPNGSizeCompression: number;

@@ -31,6 +31,7 @@ import { Itaku } from './itaku/Itaku';
 import { Picarto } from './picarto/Picarto';
 import { SubscribeStarAdult } from './subscribe-star/SubscribeStarAdult';
 import { Pixelfed } from './pixelfed/Pixelfed';
+import { VKontakte } from './vkontakte/VKontakte';
 
 export class WebsiteRegistry {
   static readonly websites: Record<string, Website> = {
@@ -63,6 +64,7 @@ export class WebsiteRegistry {
     Telegram: new Telegram(),
     Tumblr: new Tumblr(),
     Twitter: new Twitter(),
+    VKontakte: new VKontakte(),
     Weasyl: new Weasyl(),
     e621: new e621()
   };

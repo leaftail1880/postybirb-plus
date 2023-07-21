@@ -1,50 +1,52 @@
-import React from 'react';
-import _ from 'lodash';
-import { WebsiteRegistry } from '../../../../websites/website-registry';
-import DefaultFormSection from '../form-sections/DefaultFormSection';
-import SubmissionService from '../../../../services/submission.service';
-import SubmissionUtil from '../../../../utils/submission.util';
-import { FileSubmission } from 'postybirb-commons';
-import { LoginStatusStore } from '../../../../stores/login-status.store';
-import { Match, withRouter, history } from 'react-router-dom';
-import { headerStore } from '../../../../stores/header.store';
-import { inject, observer } from 'mobx-react';
-import { uiStore } from '../../../../stores/ui.store';
-import { SubmissionPackage } from 'postybirb-commons';
+import {
+  Alert,
+  Anchor,
+  Button,
+  Card,
+  DatePicker,
+  Form,
+  Icon,
+  Popconfirm,
+  Spin,
+  Tooltip,
+  TreeSelect,
+  Typography,
+  Upload,
+  message
+} from 'antd';
 import { TreeNode } from 'antd/lib/tree-select';
 import { RcFile, UploadChangeParam, UploadFile } from 'antd/lib/upload/interface';
+import _ from 'lodash';
+import { inject, observer } from 'mobx-react';
+import moment from 'moment';
+import {
+  DefaultOptions,
+  FileRecord,
+  FileSubmission,
+  Problem,
+  Submission,
+  SubmissionPackage,
+  SubmissionPart,
+  SubmissionType,
+  UserAccountDto
+} from 'postybirb-commons';
+import React from 'react';
+import { Match, history, withRouter } from 'react-router-dom';
+import PostService from '../../../../services/post.service';
+import RemoteService from '../../../../services/remote.service';
+import SubmissionService from '../../../../services/submission.service';
+import { headerStore } from '../../../../stores/header.store';
+import { LoginStatusStore } from '../../../../stores/login-status.store';
+import { submissionStore } from '../../../../stores/submission.store';
+import { uiStore } from '../../../../stores/ui.store';
+import SubmissionUtil from '../../../../utils/submission.util';
+import { WebsiteRegistry } from '../../../../websites/website-registry';
+import SubmissionImageCropper from '../../submission-image-cropper/SubmissionImageCropper';
+import FallbackStoryInput from '../form-components/FallbackStoryInput';
 import ImportDataSelect from '../form-components/ImportDataSelect';
+import DefaultFormSection from '../form-sections/DefaultFormSection';
 import WebsiteSections from '../form-sections/WebsiteSections';
 import { FormSubmissionPart } from '../interfaces/form-submission-part.interface';
-import { SubmissionPart } from 'postybirb-commons';
-import moment from 'moment';
-import { SubmissionType } from 'postybirb-commons';
-import { Submission } from 'postybirb-commons';
-import { DefaultOptions } from 'postybirb-commons';
-import { FileRecord } from 'postybirb-commons';
-import { UserAccountDto } from 'postybirb-commons';
-import { submissionStore } from '../../../../stores/submission.store';
-import PostService from '../../../../services/post.service';
-import FallbackStoryInput from '../form-components/FallbackStoryInput';
-import RemoteService from '../../../../services/remote.service';
-import SubmissionImageCropper from '../../submission-image-cropper/SubmissionImageCropper';
-import {
-  Form,
-  Button,
-  Typography,
-  Spin,
-  message,
-  TreeSelect,
-  Anchor,
-  Card,
-  Upload,
-  Icon,
-  DatePicker,
-  Popconfirm,
-  Alert,
-  Tooltip
-} from 'antd';
-import { Problem } from 'postybirb-commons';
 
 interface Props {
   match: Match;
@@ -169,7 +171,7 @@ class SubmissionEditForm extends React.Component<Props, SubmissionEditFormState>
             this.setState({ loading: false });
             message.error('A problem occurred when trying to save the submission.');
           })
-          .finally(resolve);
+          .finally(() => resolve(void 0));
       }
     });
   };

@@ -1,10 +1,10 @@
 import { app } from 'electron';
-import { Logger } from '@nestjs/common';
+import { ConsoleLogger } from '@nestjs/common';
 import * as winston from 'winston';
 import * as path from 'path';
 import 'winston-daily-rotate-file';
 
-export class CustomLogger extends Logger {
+export class CustomLogger extends ConsoleLogger {
   static logger = winston.createLogger({
     transports: [
       new winston.transports.DailyRotateFile({

@@ -24,6 +24,7 @@ declare global {
       auth: {
         Tumblr: Authorizer;
         DeviantArt: Authorizer;
+        VKontakte: Authorizer;
       };
     };
     AUTH_ID: string;

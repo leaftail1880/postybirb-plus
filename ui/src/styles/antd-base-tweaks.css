@@ -1,3 +1,7 @@
+.ant-dropdown-menu {
+  overflow: auto;
+}
+
 .ant-form-item {
   margin-bottom: 0px;
 }

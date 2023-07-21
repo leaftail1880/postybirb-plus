@@ -1,11 +1,11 @@
-import { BadRequestException, NotFoundException } from '@nestjs/common';
-import * as Datastore from 'nedb';
-import * as util from 'util';
+import { BadRequestException } from '@nestjs/common';
+import { instanceToPlain } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
-import { classToPlain } from 'class-transformer';
-import Entity from '../models/entity.model';
+import * as Datastore from 'nedb';
 import { EntityIntf } from 'postybirb-commons';
+import * as util from 'util';
 import { Database } from '../database.abstract';
+import Entity from '../models/entity.model';
 
 export default abstract class NedbDatabase<T extends Entity, K extends EntityIntf> extends Database<
   T,
@@ -35,7 +35,7 @@ export default abstract class NedbDatabase<T extends Entity, K extends EntityInt
 
   async find(search?: any): Promise<T[]> {
     const docs = await this._find(search || {});
-    return docs.map(doc => this.constructEntity(doc));
+    return docs.map((doc) => this.constructEntity(doc));
   }
 
   async findOne(id: string): Promise<T> {
@@ -76,7 +76,7 @@ export default abstract class NedbDatabase<T extends Entity, K extends EntityInt
   async save(entity: T): Promise<T> {
     try {
       await validateOrReject(entity);
-      const obj = classToPlain<T>(entity) as EntityIntf;
+      const obj = instanceToPlain<T>(entity) as EntityIntf;
       obj.created = Date.now();
       const savedEntity = await this._insert(obj);
       return this.constructEntity(savedEntity);
@@ -90,7 +90,7 @@ export default abstract class NedbDatabase<T extends Entity, K extends EntityInt
   async update(entity: T): Promise<number> {
     try {
       await validateOrReject(entity);
-      const obj = classToPlain<T>(entity) as EntityIntf;
+      const obj = instanceToPlain<T>(entity) as EntityIntf;
       // Disallow id updates
       delete obj._id;
       const updatedCount = await this._update(
@@ -112,7 +112,7 @@ export default abstract class NedbDatabase<T extends Entity, K extends EntityInt
   }
 
   count(query?: any): Promise<number> {
-    return new Promise(resolve => {
+    return new Promise((resolve) => {
       this.db.count(query || {}, (err, count) => resolve(count));
     });
   }

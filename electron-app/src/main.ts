@@ -1,19 +1,9 @@
-/* tslint:disable: no-console no-var-requires */
 const path = require('path');
-import {
-  app,
-  BrowserWindow,
-  Menu,
-  nativeImage,
-  nativeTheme,
-  Tray,
-  Notification,
-  webContents,
-} from 'electron';
+import { enable as enableRemote, initialize as initializeRemote } from '@electron/remote/main';
+import { BrowserWindow, Menu, Notification, Tray, app, nativeImage, nativeTheme } from 'electron';
 import * as WindowStateKeeper from 'electron-window-state';
 import { enableSleep } from './app/power-save';
 import * as util from './app/utils';
-import { initialize as initializeRemote, enable as enableRemote } from '@electron/remote/main';
 
 initializeRemote();
 
@@ -55,7 +45,7 @@ let mainWindowState: WindowStateKeeper.State = null;
 let mainWindow: BrowserWindow = null;
 let backgroundAlertTimeout = null;
 let hasNotifiedAboutBackground = false;
-const icon: string = path.join(__dirname, '../build/assets/icons/minnowicon.png');
+const icon: string = path.join(__dirname, '../front/assets/icons/minnowicon.png');
 
 // Enable windows 10 notifications
 if (util.isWindows()) {
@@ -73,27 +63,17 @@ app.on('ready', () => {
   nest = require('./server/main');
   initialize();
 });
-app.on(
-  'certificate-error',
-  (
-    event: Electron.Event,
-    webContents: Electron.WebContents,
-    url: string,
-    error: string,
-    certificate: Electron.Certificate,
-    callback: (allow: boolean) => void,
-  ) => {
-    if (
-      certificate.issuerName === 'postybirb.com' &&
-      certificate.subject.organizations[0] === 'PostyBirb' &&
-      certificate.issuer.country === 'US'
-    ) {
-      callback(true);
-    } else {
-      callback(false);
-    }
-  },
-);
+app.on('certificate-error', (event, webContents, url, error, certificate, callback) => {
+  if (
+    certificate.issuerName === 'postybirb.com' &&
+    certificate.subject.organizations[0] === 'PostyBirb' &&
+    certificate.issuer.country === 'US'
+  ) {
+    callback(true);
+  } else {
+    callback(false);
+  }
+});
 app.on('quit', () => {
   enableSleep();
   clearTimeout(backgroundAlertTimeout);
@@ -149,10 +129,11 @@ function createWindow() {
     webPreferences: {
       devTools: true,
       allowRunningInsecureContent: false,
-      nodeIntegration: false,
+      nodeIntegration: true,
       preload: path.join(__dirname, 'app', 'preload.js'),
       webviewTag: true,
-      contextIsolation: false,
+      contextIsolation: true,
+
       spellcheck: true,
       backgroundThrottling: false,
     },
@@ -163,13 +144,18 @@ function createWindow() {
   (mainWindow as any).AUTH_ID = global.AUTH_ID;
   (mainWindow as any).AUTH_SERVER_URL = global.AUTH_SERVER_URL;
   (mainWindow as any).IS_DARK_THEME = nativeTheme.shouldUseDarkColors;
+  (mainWindow as any).NODE_ENV = process.env.NODE_ENV;
   if (!global.DEBUG_MODE) {
     mainWindowState.manage(mainWindow);
   }
 
-  mainWindow.webContents.on('new-window', (event) => event.preventDefault());
+  mainWindow.webContents.setWindowOpenHandler(() => {
+    return { action: 'deny' };
+  });
   mainWindow.on('closed', () => {
     mainWindow = null;
+
+    if (global.settingsDB.get('quitOnClose').value()) return app.quit();
     if (global.tray && util.isWindows()) {
       clearTimeout(backgroundAlertTimeout);
       if (!hasNotifiedAboutBackground) {
@@ -187,7 +173,7 @@ function createWindow() {
     }
   });
 
-  mainWindow.loadFile(path.join(__dirname, '../build/index.html')).then(() => {
+  mainWindow.loadFile(path.join(__dirname, '../front/index.html')).then(() => {
     loader.hide();
     mainWindow.show();
     if (global.DEBUG_MODE) {
@@ -214,6 +200,14 @@ function buildTray(image: Electron.NativeImage): Tray {
       label: 'Open',
       click() {
         show();
+      },
+    },
+    {
+      label: 'Quit on close',
+      type: 'checkbox',
+      checked: global.settingsDB.get('quitOnClose').value(),
+      click(event: any) {
+        global.settingsDB.set('quitOnClose', event.checked).write();
       },
     },
     {

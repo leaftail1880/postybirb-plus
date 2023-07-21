@@ -1,23 +1,23 @@
-import React from 'react';
-import { inject, observer } from 'mobx-react';
-import { SettingsStore } from '../../stores/settings.store';
-import SettingsService from '../../services/settings.service';
-import { Settings } from 'postybirb-commons';
 import {
-  Form,
+  Button,
   Collapse,
-  Switch,
-  Tooltip,
+  Form,
+  Input,
   InputNumber,
   Radio,
-  Input,
+  Switch,
+  Tooltip,
   Typography,
-  Button,
   message
 } from 'antd';
-import { UIStore } from '../../stores/ui.store';
-import UpdateService from '../../services/update.service';
+import { inject, observer } from 'mobx-react';
+import { Settings } from 'postybirb-commons';
+import React from 'react';
 import RemoteService from '../../services/remote.service';
+import SettingsService from '../../services/settings.service';
+import UpdateService from '../../services/update.service';
+import { SettingsStore } from '../../stores/settings.store';
+import { UIStore } from '../../stores/ui.store';
 
 interface Props {
   settingsStore?: SettingsStore;
@@ -209,6 +209,12 @@ export default class SettingsView extends React.Component<Props> {
               <Switch
                 checked={settings.openWindowOnStartup}
                 onChange={value => this.updateSetting('openWindowOnStartup', value)}
+              />
+            </Form.Item>
+            <Form.Item label="Continue on background after close">
+              <Switch
+                checked={!settings.closeOnQuit}
+                onChange={value => this.updateSetting('closeOnQuit', !value)}
               />
             </Form.Item>
           </Collapse.Panel>

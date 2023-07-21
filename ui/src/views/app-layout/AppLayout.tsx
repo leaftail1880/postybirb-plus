@@ -111,7 +111,7 @@ export default class AppLayout extends React.Component<Props, State> {
       duration: 2,
       maxCount: 2
     });
-    this.props.uiStore!.setActiveNav(this.getCurrentNavId());
+    // this.props.uiStore!.setActiveNav(this.getCurrentNavId());
     return (
       <ConfigProvider>
         <Modal
@@ -157,7 +157,7 @@ export default class AppLayout extends React.Component<Props, State> {
                 <div
                   className="logo"
                   style={{
-                    backgroundImage: `url("${process.env.PUBLIC_URL}/assets/icons/minnowicon.png")`
+                    backgroundImage: `url("./assets/icons/minnowicon.png")`
                   }}
                 >
                   PostyBirb

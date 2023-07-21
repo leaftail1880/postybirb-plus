@@ -10,6 +10,7 @@ export class SettingsStore {
     emptyQueueOnFailedPost: true,
     postRetries: 1,
     openOnLogin: false,
+    closeOnQuit: false,
     openWindowOnStartup: true,
     useHardwareAcceleration: false,
     maxPNGSizeCompression: 25,

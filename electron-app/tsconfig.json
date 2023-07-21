@@ -7,10 +7,15 @@
     "experimentalDecorators": true,
     "target": "es2017",
     "sourceMap": false,
-    "outDir": "./dist",
+    "outDir": "./back",
     "baseUrl": "./",
     "incremental": true,
-    "rootDir": "./src"
+    "rootDir": ".",
+    "skipLibCheck": true,
+    "paths": {
+      "postybirb-commons": ["../commons", "../commons/src/index"]
+    }
   },
-  "exclude": ["node_modules", "dist"]
+  "include": ["src", "test"],
+  "exclude": ["node_modules", "back"]
 }

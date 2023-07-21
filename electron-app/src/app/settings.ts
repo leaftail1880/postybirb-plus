@@ -17,6 +17,7 @@ const settingDefauls: Settings = {
   postRetries: 0,
   openWindowOnStartup: true,
   openOnLogin: false,
+  closeOnQuit: false,
   useHardwareAcceleration: !util.isLinux(),
   maxPNGSizeCompression: 50,
   maxPNGSizeCompressionWithAlpha: 60,

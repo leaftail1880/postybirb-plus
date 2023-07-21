@@ -1,25 +1,24 @@
-import React from 'react';
-import * as _ from 'lodash';
-import { SubmissionTemplateStore } from '../../stores/submission-template.store';
-import { headerStore } from '../../stores/header.store';
-import { Link } from 'react-router-dom';
-import { inject, observer } from 'mobx-react';
-import { SubmissionTemplate } from 'postybirb-commons';
-import SubmissionTemplateService from '../../services/submission-template.service';
-import { SubmissionType } from 'postybirb-commons';
 import {
-  List,
+  Avatar,
   Button,
+  Form,
+  Icon,
   Input,
+  List,
   Modal,
   Popconfirm,
+  Radio,
   Typography,
-  Avatar,
-  message,
-  Icon,
-  Form,
-  Radio
+  message
 } from 'antd';
+import * as _ from 'lodash';
+import { inject, observer } from 'mobx-react';
+import { SubmissionTemplate, SubmissionType } from 'postybirb-commons';
+import React from 'react';
+import { Link } from 'react-router-dom';
+import SubmissionTemplateService from '../../services/submission-template.service';
+import { headerStore } from '../../stores/header.store';
+import { SubmissionTemplateStore } from '../../stores/submission-template.store';
 
 interface Props {
   submissionTemplateStore?: SubmissionTemplateStore;
@@ -50,7 +49,7 @@ export default class SubmissionTemplates extends React.Component<Props> {
         <List
           loading={this.props.submissionTemplateStore!.isLoading}
           dataSource={this.props.submissionTemplateStore!.all}
-          renderItem={(item: SubmissionTemplate) => <ListItem {...item} />}
+          renderItem={(item: SubmissionTemplate, i) => <ListItem key={_.uniqueId()} {...item} />}
         />
       </div>
     );

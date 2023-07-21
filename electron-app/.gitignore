@@ -1,10 +1,10 @@
 # compiled output
-/dist
-/build
+/back
+/front
 /node_modules
-/electron-dist
 /release
 tsconfig.build.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Logs
 logs

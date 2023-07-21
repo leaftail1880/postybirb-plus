@@ -1,35 +1,1 @@
-{
-  "name": "postybirb-plus",
-  "version": "3.1.20",
-  "description": "PostyBirb is an application that helps artists post art and other multimedia to multiple websites more quickly..",
-  "main": "index.js",
-  "scripts": {
-    "install": "run-p install:**",
-    "install:commons": "cd commons && npm install && npm run build",
-    "install:app": "cd electron-app && npm install",
-    "install:ui": "cd ui && npm install",
-    "build": "run-p build:**",
-    "build:app": "cd electron-app && npm run build",
-    "build:ui": "cd ui && npm run build",
-    "make": "run-s install build",
-    "release:windows": "node create-signer.js && npm run make && cd electron-app && yarn run release:windows",
-    "release:linux": "node create-signer.js && npm run make && cd electron-app && yarn run release:linux",
-    "release:osx": "npm run make && cd electron-app && yarn run release:osx"
-  },
-  "repository": {
-    "type": "git",
-    "url": "git+https://github.com/mvdicarlo/postybirb-plus.git"
-  },
-  "author": "Michael DiCarlo",
-  "license": "BSD-3-Clause",
-  "bugs": {
-    "url": "https://github.com/mvdicarlo/postybirb-plus/issues"
-  },
-  "homepage": "https://github.com/mvdicarlo/postybirb-plus#readme",
-  "dependencies": {
-    "@mtproto/core": "^5.3.0",
-    "npm-run-all": "^4.1.5",
-    "shx": "^0.3.4",
-    "yarn": "^1.22.4"
-  }
-}
+{  "name": "postybirb-plus",  "version": "3.1.21",  "description": "PostyBirb is an application that helps artists post art and other multimedia to multiple websites more quickly..",  "main": "index.js",  "scripts": {    "run": "npm run build:compile --prefix ui && npm run start --prefix electron-app",    "install": "concurrently -c auto npm:install:*",    "install:commons": "cd commons && npm install && npm run build",    "install:app": "cd electron-app && npm install",    "install:ui": "cd ui && npm install",    "build": "concurrently -c auto npm:build:*",    "build:app": "cd electron-app && npm run build",    "build:ui": "cd ui && npm run build",    "make": "concurrently -c auto npm:install:* && concurrently -c auto npm:build:*",    "release:windows": "node create-signer.js && npm run make && cd electron-app && yarn run release:windows",    "release:linux": "node create-signer.js && npm run make && cd electron-app && yarn run release:linux",    "release:osx": "npm run make && cd electron-app && yarn run release:osx"  },  "repository": {    "type": "git",    "url": "git+https://github.com/mvdicarlo/postybirb-plus.git"  },  "author": "Michael DiCarlo",  "license": "BSD-3-Clause",  "bugs": {    "url": "https://github.com/mvdicarlo/postybirb-plus/issues"  },  "homepage": "https://github.com/mvdicarlo/postybirb-plus#readme",  "dependencies": {    "@typescript-eslint/eslint-plugin": "^5.59.6",    "@typescript-eslint/parser": "^5.59.6",    "concurrently": "^8.0.1",    "eslint": "^7.32.0",    "eslint-config-prettier": "7.2.0",    "eslint-plugin-prettier": "^3.4.1",    "npm": "^7.5.6",    "prettier": "^2.4.1",    "shx": "^0.3.4",    "typescript": "^4.9.0",    "yarn": "^1.22.19"  },  "devDependencies": {    "source-map-explorer": "^2.5.3"  }}

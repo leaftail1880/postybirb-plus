@@ -1,5 +1,5 @@
-/* tslint:disable: no-console no-var-requires variable-name */
-import { clipboard, shell, session, app, getCurrentWindow } from '@electron/remote';
+import { app, clipboard, getCurrentWindow, session, shell } from '@electron/remote';
+import { contextBridge } from 'electron';
 
 // Authorizers
 const Tumblr = require('./authorizers/tumblr.auth');
@@ -14,12 +14,14 @@ process.once('loaded', () => {
   global.Buffer = _Buffer;
 });
 
-(window as any).PORT = (getCurrentWindow() as any).PORT;
-(window as any).AUTH_ID = (getCurrentWindow() as any).AUTH_ID;
-(window as any).IS_DARK_THEME = (getCurrentWindow() as any).IS_DARK_THEME;
-(window as any).AUTH_SERVER_URL = (getCurrentWindow() as any).AUTH_SERVER_URL;
-(window as any).appVersion = app.getVersion();
-(window as any).electron = {
+const current = getCurrentWindow() as any;
+contextBridge.exposeInMainWorld('PORT', current.PORT);
+contextBridge.exposeInMainWorld('AUTH_ID', current.AUTH_ID);
+contextBridge.exposeInMainWorld('IS_DARK_THEME', current.IS_DARK_THEME);
+contextBridge.exposeInMainWorld('AUTH_SERVER_URL', current.AUTH_SERVER_URL);
+contextBridge.exposeInMainWorld('appVersion', app.getVersion());
+contextBridge.exposeInMainWorld('process', { env: { NODE_ENV: current.NODE_ENV } });
+contextBridge.exposeInMainWorld('electron', {
   clipboard: {
     availableFormats: clipboard.availableFormats,
     read() {
@@ -33,15 +35,15 @@ process.once('loaded', () => {
     },
   },
   session: {
-    getCookies(accountId) {
+    getCookies(accountId: string) {
       return session.fromPartition(`persist:${accountId}`).cookies.get({});
     },
-    clearSessionData(id) {
+    clearSessionData(id: string) {
       return session.fromPartition(`persist:${id}`).clearStorageData();
     },
   },
   shell: {
-    openInBrowser(url) {
+    openInBrowser(url: string) {
       return shell.openExternal(url);
     },
   },
@@ -50,4 +52,4 @@ process.once('loaded', () => {
     Tumblr,
     DeviantArt,
   },
-};
+});

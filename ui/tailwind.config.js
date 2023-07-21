@@ -18,9 +18,10 @@ module.exports = {
     },
     cursor: {
       'zoom-in': 'zoom-in',
-      'pointer': 'pointer'
+      pointer: 'pointer'
     }
   },
   variants: {},
-  plugins: []
+  plugins: [],
+  content: ['./src/**/*.tsx', './src/**/*.ts']
 };
