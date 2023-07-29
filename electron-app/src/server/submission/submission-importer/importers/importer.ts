@@ -1,15 +1,15 @@
-import SubmissionCreateModel from '../../models/submission-create.model';
-import SubmissionEntity from '../../models/submission.entity';
-import { NotificationType } from 'src/server/notification/enums/notification-type.enum';
-import { SubmissionCreate, SubmissionType, UploadedFile } from 'postybirb-commons';
-import { SubmissionImporterService } from '../submission-importer.service';
-import { basename } from 'path';
-import * as filetype from 'file-type';
-import * as fs from 'fs-extra';
-import * as domutils from 'domutils';
-import * as htmlparser2 from 'htmlparser2';
 import render from 'dom-serializer';
 import { Element, Node, NodeWithChildren } from 'domhandler';
+import * as domutils from 'domutils';
+import * as filetype from 'file-type';
+import * as fs from 'fs-extra';
+import * as htmlparser2 from 'htmlparser2';
+import { basename } from 'path';
+import { SubmissionCreate, SubmissionType, UploadedFile } from 'postybirb-commons';
+import { NotificationType } from 'src/server/notification/enums/notification-type.enum';
+import SubmissionCreateModel from '../../models/submission-create.model';
+import SubmissionEntity from '../../models/submission.entity';
+import { SubmissionImporterService } from '../submission-importer.service';
 
 export interface DirectoryEntry {
   type: 'file' | 'directory' | 'unknown';
@@ -124,7 +124,7 @@ export abstract class Importer {
 
   protected scrubHtmlDescription(description: string): string {
     const doc = htmlparser2.parseDocument(description);
-    return render(this.scrubHtmlNode(doc));
+    return render(this.scrubHtmlNode(doc as any) as any);
   }
 
   protected scrubHtmlNode(node: Node): Node | null {
@@ -133,10 +133,10 @@ export abstract class Importer {
       : node;
 
     if (!scrubbed) {
-      domutils.removeElement(node);
+      domutils.removeElement(node as any);
       return null;
     } else if (scrubbed !== node) {
-      domutils.replaceElement(node, scrubbed);
+      domutils.replaceElement(node as any, scrubbed as any);
     }
 
     if ('children' in scrubbed) {

@@ -92,7 +92,7 @@ export class DeviantArt extends Website {
 
       if (placebo.body.status === 'success') {
         return data;
-      }
+      } else this.logger.log('Failed to update token:', placebo.body);
     }
 
     const renew = await Http.post<ApiResponse<DeviantArtAccountData>>(
@@ -105,6 +105,7 @@ export class DeviantArt extends Website {
     );
 
     if (!renew.body.success) {
+      this.logger.log('Unsucessfull renew token:', renew.body);
       return null;
     }
 

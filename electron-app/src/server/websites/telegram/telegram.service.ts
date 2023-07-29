@@ -31,6 +31,8 @@ import { ScalingOptions } from '../interfaces/scaling-options.interface';
 import { Website } from '../website.base';
 import { TelegramStorage } from './telegram.storage';
 import _ = require('lodash');
+import ImageManipulator from 'src/server/file-manipulation/manipulators/image.manipulator';
+import FormContent from 'src/server/utils/form-content.util';
 
 @Injectable()
 export class Telegram extends Website {

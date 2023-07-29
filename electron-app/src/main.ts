@@ -1,11 +1,18 @@
 const path = require('path');
-import { BrowserWindow, Menu, Notification, Tray, app, nativeImage, nativeTheme } from 'electron';
+import { enable as enableRemote, initialize as initializeRemote } from '@electron/remote/main';
+import {
+  BrowserWindow,
+  Menu,
+  Notification,
+  Tray,
+  app,
+  nativeImage,
+  nativeTheme,
+  session,
+} from 'electron';
 import * as WindowStateKeeper from 'electron-window-state';
 import { enableSleep } from './app/power-save';
 import * as util from './app/utils';
-import { initialize as initializeRemote, enable as enableRemote } from '@electron/remote/main';
-import { session } from 'electron';
-
 initializeRemote();
 
 const hasLock = app.requestSingleInstanceLock();
@@ -86,9 +93,7 @@ async function initialize() {
     return;
   }
   const ses = session.fromPartition('persist:name');
-  const userAgent = `PostyBirb/${
-    app.getVersion()
-  } (by mvdicarlo on GitHub) ${ses.getUserAgent()}`;
+  const userAgent = `PostyBirb/${app.getVersion()} (by mvdicarlo on GitHub) ${ses.getUserAgent()}`;
 
   session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
     details.requestHeaders['User-Agent'] = userAgent;

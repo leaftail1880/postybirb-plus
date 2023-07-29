@@ -67,7 +67,7 @@ export class FurAffinity extends Website {
   async checkLoginStatus(data: UserAccountEntity): Promise<LoginResponse> {
     const status: LoginResponse = { loggedIn: false, username: null };
     const res = await Http.get<string>(`${this.BASE_URL}/controls/submissions`, data._id);
-    if (res.body.includes('logout-link')) {
+    if (res.body?.includes('logout-link')) {
       status.loggedIn = true;
       const $ = cheerio.load(res.body);
       status.username = $('.loggedin_user_avatar').attr('alt');
