@@ -1,5 +1,6 @@
 import MTProtoClass = require('@mtproto/core');
 import { Injectable } from '@nestjs/common';
+import { writeFile } from 'fs/promises';
 import {
   DefaultOptions,
   FileRecord,
@@ -14,7 +15,8 @@ import {
   TelegramNotificationOptions,
 } from 'postybirb-commons';
 import UserAccountEntity from 'src/server/account/models/user-account.entity';
-import { PlaintextParser } from 'src/server/description-parsing/plaintext/plaintext.parser';
+import { HTMLFormatParser } from 'src/server/description-parsing/html/html.parser';
+import ImageManipulator from 'src/server/file-manipulation/manipulators/image.manipulator';
 import { CancellationToken } from 'src/server/submission/post/cancellation/cancellation-token';
 import {
   FilePostData,
@@ -31,13 +33,11 @@ import { ScalingOptions } from '../interfaces/scaling-options.interface';
 import { Website } from '../website.base';
 import { TelegramStorage } from './telegram.storage';
 import _ = require('lodash');
-import ImageManipulator from 'src/server/file-manipulation/manipulators/image.manipulator';
-import FormContent from 'src/server/utils/form-content.util';
 
 @Injectable()
 export class Telegram extends Website {
   readonly BASE_URL: string;
-  readonly defaultDescriptionParser = PlaintextParser.parse;
+  readonly defaultDescriptionParser = HTMLFormatParser.parse;
   readonly acceptsFiles: string[] = [];
   private readonly instances: Record<string, typeof MTProtoClass> = {};
   private authData: Record<string, { phone_code_hash: string; phone_number: string }> = {};
@@ -298,24 +298,22 @@ export class Telegram extends Website {
     return { maxSize: FileSize.MBtoBytes(10) };
   }
 
-  private async upload(appId: string, file: PostFileRecord) {
-    const parts = _.chunk(file.file.value, 512000); // 512KB
+  private async upload(appId: string, file: PostFileRecord, preUpload: boolean) {
+    const parts = _.chunk(file.file.value, 514288); // 512KB
     const file_id = Date.now();
-    const props: {
-      _: 'inputMediaUploadedDocument' | 'inputMediaUploadedPhoto';
-      mime_type?: string;
-      nosound_video?: boolean;
-      attributes?: any[];
-    } = {
-      _: 'inputMediaUploadedDocument',
-    };
-    if (
+    const bigFile = file.file.value.length >= FileSize.MBtoBytes(10);
+    const type: 'photo' | 'document' =
       file.file.options.contentType === 'image/png' ||
       file.file.options.contentType === 'image/jpg' ||
       file.file.options.contentType === 'image/jpeg'
-    ) {
-      props._ = 'inputMediaUploadedPhoto';
-    } else {
+        ? 'photo'
+        : 'document';
+
+    const props: InputMedia = {
+      _: `inputMediaUploaded${type === 'document' ? 'Document' : 'Photo'}`,
+    };
+
+    if (type === 'document') {
       props.attributes = [];
       props.mime_type = file.file.options.contentType;
       if (props.mime_type === 'image/gif') {
@@ -323,49 +321,49 @@ export class Telegram extends Website {
       }
     }
 
-    if (file.file.value.length >= FileSize.MBtoBytes(10)) {
-      // Big file path
-      for (let i = 0; i < parts.length; i++) {
-        await this.callApi(appId, 'upload.saveBigFilePart', {
-          file_id,
-          file_part: i,
-          file_total_parts: parts.length,
-          bytes: parts[i],
-        });
+    for (let i = 0; i < parts.length; i++) {
+      console.log({ file_id, file_part: i, file_total_parts: bigFile ? parts.length : void 0 });
+      await this.callApi(appId, `upload.save${bigFile ? 'Big' : ''}FilePart`, {
+        file_id,
+        file_part: i,
+        file_total_parts: bigFile ? parts.length : void 0,
+        bytes: parts[i],
+      });
+    }
 
-        WaitUtil.wait(1000); // Too much perhaps?
-      }
+    let media: InputMedia = {
+      ...props,
+      file: {
+        _: `inputFile${bigFile ? 'Big' : ''}`,
+        id: file_id,
+        parts: parts.length,
+        name: file.file.options.filename,
+      },
+    };
 
-      return {
-        ...props,
-        file: {
-          _: 'inputFileBig',
-          id: file_id,
-          parts: parts.length,
-          name: file.file.options.filename,
+    // Preupload file to use in messages.sendMultiMedia
+    // or to send in multiple chats
+    if (preUpload) {
+      const messageMedia = await this.callApi<MessageMedia>(appId, `messages.uploadMedia`, {
+        media,
+        peer: {
+          _: 'inputPeerSelf',
         },
-      };
-    } else {
-      for (let i = 0; i < parts.length; i++) {
-        await this.callApi(appId, 'upload.saveFilePart', {
-          file_id,
-          file_part: i,
-          bytes: parts[i],
-        });
-
-        WaitUtil.wait(1000); // Too much perhaps?
-      }
-
-      return {
+      });
+      const file = messageMedia.photo ?? messageMedia.document;
+      props._ = `inputMedia${props._.includes('Photo') ? 'Photo' : 'Document'}`;
+      media = {
         ...props,
-        file: {
-          _: 'inputFile',
-          id: file_id,
-          parts: parts.length,
-          name: file.file.options.filename,
+        id: {
+          _: type === 'document' ? 'inputDocument' : 'inputPhoto',
+          access_hash: file.access_hash,
+          id: file.id,
+          file_reference: file.file_reference,
         },
       };
     }
+
+    return media;
   }
 
   async postFileSubmission(
@@ -375,21 +373,24 @@ export class Telegram extends Website {
   ): Promise<PostResponse> {
     const appId = accountData.appId;
     const files = [data.primary, ...data.additional];
-    const fileData: {
-      _: string;
-      file: {
-        _: string;
-        id: number;
-        parts: number;
-        name: string;
-      };
-    }[] = [];
+    const fileData: InputMedia[] = [];
+    const oneFile = files.length === 1;
     for (const file of files) {
       this.checkCancelled(cancellationToken);
-      fileData.push(await this.upload(appId, file));
+      // preupload file for use in messages.sendMultiMedia or in multiple channels
+      const preupload = !oneFile || data.options.channels.length > 1;
+      fileData.push(await this.upload(appId, file, preupload));
     }
 
-    const description = data.description.slice(0, 4096).trim();
+    const description = data.description.trim();
+    let response: SendMessageResponse;
+    let mediaDescription = '';
+    let messageDescription = [];
+    if (description.length < 1024) {
+      mediaDescription = description;
+    } else {
+      messageDescription = description.length < 4096 ? [description] : _.chunk(description, 4069);
+    }
 
     for (const channel of data.options.channels) {
       this.checkCancelled(cancellationToken);
@@ -399,60 +400,48 @@ export class Telegram extends Website {
         channel_id,
         access_hash,
       };
-      if (files.length === 1) {
-        let messagePosted = false;
-        if (description.length > 1024) {
-          messagePosted = true;
-          await this.callApi(accountData.appId, 'messages.sendMessage', {
-            random_id: Date.now(),
-            message: data.description.slice(0, 4096).trim(),
-            peer: {
-              _: 'inputPeerChannel',
-              channel_id,
-              access_hash,
-            },
-          });
-        }
-        await this.callApi(appId, 'messages.sendMedia', {
+
+      if (oneFile) {
+        response = await this.callApi(appId, `messages.sendMedia`, {
           random_id: Date.now(),
           media: fileData[0],
-          message: messagePosted ? '' : data.description,
-          peer,
+          message: mediaDescription,
           silent: data.options.silent,
+          peer,
         });
       } else {
-        let messagePosted = false;
-        if (description.length > 1024) {
-          messagePosted = true;
-          await this.callApi(accountData.appId, 'messages.sendMessage', {
-            random_id: Date.now(),
-            message: data.description.slice(0, 4096).trim(),
-            peer: {
-              _: 'inputPeerChannel',
-              channel_id,
-              access_hash,
-            },
-          });
-        }
-
-        // multimedia send
         const id = Date.now();
-        for (let i = 0; i < fileData.length; i++) {
-          await this.callApi(appId, 'messages.sendMedia', {
+        response =  await this.callApi(appId, `messages.sendMultiMedia`, {
+          multi_media: fileData.map((f, i) => {
+            return {
+              _: 'inputSingleMedia',
+              random_id: id + i,
+              media: f,
+            };
+          }),
+          message: mediaDescription,
+          silent: data.options.silent,
+          peer,
+        });
+      }
+
+      // Send long description by separate message(s)
+      if (messageDescription) {
+        const id = Date.now();
+        for (let i = 0; i < messageDescription.length; i++) {
+          await this.callApi(accountData.appId, 'messages.sendMessage', {
             random_id: id + i,
-            media: fileData[i],
-            message: messagePosted ? '' : i === 0 ? data.description : '',
-            peer,
+            message: messageDescription[i],
             silent: data.options.silent,
+            peer,
           });
-          await WaitUtil.wait(1000);
         }
       }
 
-      WaitUtil.wait(1000);
+      await WaitUtil.wait(1000);
     }
 
-    return this.createPostResponse({});
+    return this.createPostResponse({ source: this.getSourceFromResponse(response) });
   }
 
   async postNotificationSubmission(
@@ -460,29 +449,47 @@ export class Telegram extends Website {
     data: PostData<Submission, TelegramNotificationOptions>,
     accountData: TelegramAccountData,
   ) {
+    let response: SendMessageResponse;
+    const description = data.description.trim();
+    const descriptions = description.length < 4096 ? [description] : _.chunk(description, 4069);
+
     for (const channel of data.options.channels) {
       this.checkCancelled(cancellationToken);
       const [channel_id, access_hash] = channel.split('-');
-      await this.callApi(accountData.appId, 'messages.sendMessage', {
-        random_id: Date.now(),
-        message: data.description.slice(0, 4096).trim(),
-        peer: {
-          _: 'inputPeerChannel',
-          channel_id,
-          access_hash,
-        },
-      });
+      const peer = {
+        _: 'inputPeerChannel',
+        channel_id,
+        access_hash,
+      };
+      const id = Date.now();
+      for (let i = 0; i < descriptions.length; i++) {
+        response = await this.callApi(
+          accountData.appId,
+          'messages.sendMessage',
+          {
+            random_id: id + i,
+            message: descriptions[i],
+            silent: data.options.silent,
+            peer,
+          },
+        );
+      }
 
       await WaitUtil.wait(2000);
     }
 
-    return this.createPostResponse({});
+    return this.createPostResponse({ source: this.getSourceFromResponse(response) });
+  }
+
+  private getSourceFromResponse(response: SendMessageResponse) {
+    // TODO Maybe support multiple sources from multiple channels. Need to rewrite some ui
+    const update = response.updates.find((e) => e._ === 'updateNewChannelMessage');
+    return `https://t.me/c/${update.peer_id.channel_id}/${update.id}`;
   }
 
   validateFileSubmission(
     submission: FileSubmission,
     submissionPart: SubmissionPart<TelegramFileOptions>,
-    defaultPart: SubmissionPart<DefaultOptions>,
   ): ValidationParts {
     const problems: string[] = [];
     const warnings: string[] = [];
@@ -501,14 +508,6 @@ export class Telegram extends Website {
       });
     } else {
       problems.push('No channel(s) selected.');
-    }
-
-    const description = this.defaultDescriptionParser(
-      FormContent.getDescription(defaultPart.data.description, submissionPart.data.description),
-    );
-
-    if (description.length > 4096) {
-      warnings.push('Max description length allowed is 4,096 characters.');
     }
 
     const { type, size, name } = submission.primary;
@@ -544,21 +543,45 @@ export class Telegram extends Website {
       );
       submissionPart.data.channels.forEach((f) => {
         if (!WebsiteValidator.folderIdExists(f, folders)) {
-          problems.push(`Folder (${f}) not found.`);
+          problems.push(`Channel (${f}) not found.`);
         }
       });
     } else {
       problems.push('No channel(s) selected.');
     }
 
-    const description = this.defaultDescriptionParser(
-      FormContent.getDescription(defaultPart.data.description, submissionPart.data.description),
-    );
-
-    if (description.length > 4096) {
-      warnings.push('Max description length allowed is 4,096 characters.');
-    }
-
     return { problems, warnings };
   }
+}
+
+interface InputMedia {
+  _: `inputMedia${'Uploaded' | ''}${'Document' | 'Photo'}`;
+  file?: {
+    _: `inputFile${'Big' | ''}`;
+    id: number;
+    parts: number;
+    name: string;
+  };
+  id?: Input;
+  mime_type?: string;
+  nosound_video?: boolean;
+  attributes?: any[];
+}
+
+interface MessageMedia {
+  spoiler: boolean;
+  ttl_seconds: number;
+  document?: Input;
+  photo?: Input;
+}
+
+interface Input {
+  _: `input${'Document' | 'Photo'}`;
+  id: number;
+  access_hash: number;
+  file_reference: any;
+}
+
+interface SendMessageResponse {
+  updates: { _: 'updateNewChannelMessage'; id: number; peer_id: { channel_id: number } }[];
 }
