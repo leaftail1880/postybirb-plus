@@ -34,9 +34,18 @@ import {
   ConfigProvider,
   Modal,
   Tabs,
-  message
+  message,
 } from 'antd';
 import ErrorBoundary from '../../components/ErrorBoundary';
+import { Locale } from 'antd/lib/locale-provider';
+import moment from 'moment';
+moment.locale('en-us', {
+  week: {
+    dow: 1,
+  },
+});
+import enUS from 'antd/es/locale/en_US';
+import _ from 'lodash';
 
 const { Content, Sider } = Layout;
 
@@ -51,18 +60,27 @@ interface State {
   settingsVisible: boolean;
   tagGroupVisible: boolean;
   tagConverterVisible: boolean;
+  locale: Locale;
 }
 
 @inject('uiStore')
 @observer
 export default class AppLayout extends React.Component<Props, State> {
-  public state: any = {
+  public state = {
     accountsVisible: false,
     descriptionShortcutsVisible: false,
     descriptionTemplateVisible: false,
     settingsVisible: false,
     tagGroupVisible: false,
-    tagConverterVisible: false
+    tagConverterVisible: false,
+    locale: _.extend(enUS, {
+      locale: 'en-US',
+      DatePicker: {
+        format: 'YYYY-MM-DD HH:mm:ss',
+        showTime: { format: 'HH:mm:ss', use12Hours: true },
+        placeholder: 'UnsheduledENUS',
+      },
+    }),
   };
 
   private readonly websites = Object.keys(WebsiteRegistry.websites);
@@ -109,11 +127,11 @@ export default class AppLayout extends React.Component<Props, State> {
     const state = uiStore!.state;
     message.config({
       duration: 2,
-      maxCount: 2
+      maxCount: 2,
     });
     this.props.uiStore!.setActiveNav(this.getCurrentNavId());
     return (
-      <ConfigProvider>
+      <ConfigProvider locale={this.state.locale}>
         <Modal
           title="User Agreement"
           visible={!this.props.uiStore!.state.agreementAccepted}
@@ -157,7 +175,7 @@ export default class AppLayout extends React.Component<Props, State> {
                 <div
                   className="logo"
                   style={{
-                    backgroundImage: `url("${process.env.PUBLIC_URL}/assets/icons/minnowicon.png")`
+                    backgroundImage: `url("${process.env.PUBLIC_URL}/assets/icons/minnowicon.png")`,
                   }}
                 >
                   PostyBirb

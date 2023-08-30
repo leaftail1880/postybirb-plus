@@ -228,8 +228,6 @@ export class EditableSubmissions extends React.Component<Props, State> {
                                 <DatePicker
                                   className="w-full"
                                   defaultValue={this.scheduleManyPeriod.time}
-                                  format="YYYY-MM-DD HH:mm:ss"
-                                  showTime={{ format: 'HH:mm:ss', use12Hours: true }}
                                   onChange={value =>
                                     (this.scheduleManyPeriod.time = value ? value : moment())
                                   }
