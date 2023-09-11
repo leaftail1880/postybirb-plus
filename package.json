@@ -8,13 +8,16 @@
     "install:commons": "cd commons && npm install && npm run build",
     "install:app": "cd electron-app && npm install",
     "install:ui": "cd ui && npm install",
-    "build": "run-p build:**",
-    "build:app": "cd electron-app && npm run build",
-    "build:ui": "cd ui && npm run build",
-    "make": "run-s install build",
+    "start": "electron-vite preview",
+    "dev": "electron-vite dev",
+    "build": "npm run typecheck && electron-vite build",
+    "postinstall": "electron-builder install-app-deps",
     "release:windows": "node create-signer.js && npm run make && cd electron-app && yarn run release:windows",
     "release:linux": "node create-signer.js && npm run make && cd electron-app && yarn run release:linux",
     "release:osx": "npm run make && cd electron-app && yarn run release:osx",
+    "build:win": "npm run build && electron-builder --win --config",
+    "build:mac": "electron-vite build && electron-builder --mac --config",
+    "build:linux": "electron-vite build && electron-builder --linux --config",
     "contribute": "npm ci --ignore-scripts && run-p --silent --print-name ci:** && run-p build:**",
     "contribute:debug": "npm ci --ignore-scripts && run-p --print-name ci:** && --print-label run-p build:**",
     "ci:commons": "cd commons && npm ci --no-audit&& npm run build",
@@ -22,8 +25,7 @@
     "ci:ui": "cd ui && npm ci --no-audit --no-fund --no-deprecate",
     "codestyle": "run-s format lint",
     "format": "prettier --write \"{commons/src,ui/src,electron-app/{test,src}}/**/*.ts\"",
-    "lint": "eslint \"{commons/src,ui/src,electron-app/{test,src}}/**/*.ts\"",
-    "start": "npm run start --prefix electron-app"
+    "lint": "eslint \"{commons/src,ui/src,electron-app/{test,src}}/**/*.ts\""
   },
   "repository": {
     "type": "git",
@@ -36,7 +38,6 @@
   },
   "homepage": "https://github.com/mvdicarlo/postybirb-plus#readme",
   "dependencies": {
-    "@mtproto/core": "^5.3.0",
     "npm-run-all2": "^6.0.6",
     "prettier": "^3.0.1",
     "rimraf": "^5.0.1",
@@ -47,12 +48,17 @@
   "devDependencies": {
     "@typescript-eslint/eslint-plugin": "^6.2.1",
     "@typescript-eslint/parser": "^6.2.1",
+    "@vitejs/plugin-react": "^4.0.4",
+    "electron-vite": "^1.0.27",
     "eslint": "^8.46.0",
     "eslint-config-prettier": "^8.9.0",
     "eslint-plugin-import": "^2.28.0",
     "eslint-plugin-jsdoc": "^46.4.5",
     "eslint-plugin-prefer-arrow": "^1.2.3",
     "eslint-plugin-react": "^7.33.1",
-    "eslint-plugin-react-hooks": "^4.6.0"
+    "eslint-plugin-react-hooks": "^4.6.0",
+    "autoprefixer": "^9.8.6",
+    "electron": "^19.1.9",
+    "tailwindcss": "^1.9.6"
   }
 }

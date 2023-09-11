@@ -27,7 +27,7 @@
       }
     },
     {
-      "files": "ui/**",
+      "files": "ui/src/**",
       "parserOptions": {
         "project": ["tsconfig.json", "ui/tsconfig.json"],
         "sourceType": "module"

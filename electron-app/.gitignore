@@ -5,6 +5,7 @@
 /electron-dist
 /release
 tsconfig.build.tsbuildinfo
+tsconfig.tsbuildinfo
 
 # Logs
 logs

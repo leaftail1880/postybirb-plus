@@ -10,13 +10,14 @@
     "experimentalDecorators": true,
     "esModuleInterop": true,
     "target": "es2017",
+    "skipLibCheck": true,
     "sourceMap": false,
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
     "rootDir": "./src",
     "paths": {
-      "postybirb-commons": ["../../commons/src/index.ts"]
+      "postybirb-commons": ["../commons/"],
     }
   },
   "include": ["src"],

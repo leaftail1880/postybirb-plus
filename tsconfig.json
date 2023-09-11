@@ -1,3 +1,6 @@
-// Empty file to keep eslint from react-scripts work.
-// Will be removed when react-scripts will be replaced with vite
-{}
+{
+  "compilerOptions": {
+    "esModuleInterop": true,
+    "resolveJsonModule": true
+  }
+}

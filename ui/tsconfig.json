@@ -19,7 +19,10 @@
     "noEmit": true,
     "jsx": "react",
     "noImplicitAny": false,
-    "experimentalDecorators": true
+    "experimentalDecorators": true,
+    "types": [
+      "vite/client"
+    ]
   },
   "include": [
     "src"
