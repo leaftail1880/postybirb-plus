@@ -15,11 +15,11 @@
     "outDir": "./dist",
     "baseUrl": "./",
     "incremental": true,
-    "rootDir": "./src",
+    "rootDirs": ["./src", "./test"],
     "paths": {
       "postybirb-commons": ["../commons/"],
     }
   },
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["node_modules", "dist"]
 }
