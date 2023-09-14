@@ -1,9 +1,8 @@
-/* tslint:disable: no-console no-var-requires variable-name */
 import { clipboard, dialog, shell, session, app, getCurrentWindow } from '@electron/remote';
 
 // Authorizers
-const Tumblr = require('./authorizers/tumblr.auth');
-const DeviantArt = require('./authorizers/deviant-art.auth');
+import * as Tumblr from './authorizers/tumblr.auth';
+import * as DeviantArt from './authorizers/deviant-art.auth';
 
 const _setImmediate = setImmediate;
 const _clearImmediate = clearImmediate;

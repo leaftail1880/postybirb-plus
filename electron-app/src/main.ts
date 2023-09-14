@@ -1,20 +1,12 @@
-/* tslint:disable: no-console no-var-requires */
 import path from 'path';
-import {
-  app,
-  BrowserWindow,
-  Menu,
-  nativeImage,
-  nativeTheme,
-  Tray,
-  Notification,
-  webContents,
-} from 'electron';
+import { app, BrowserWindow, Menu, nativeImage, nativeTheme, Tray, Notification } from 'electron';
 import WindowStateKeeper from 'electron-window-state';
 import { enableSleep } from './app/power-save';
 import * as util from './app/utils';
 import { initialize as initializeRemote, enable as enableRemote } from '@electron/remote/main';
 import { session } from 'electron';
+import * as loader from '../loader/loader';
+import contextMenu from 'electron-context-menu';
 
 initializeRemote();
 
@@ -28,8 +20,7 @@ app.commandLine.appendSwitch('disable-renderer-backgrounding');
 app.commandLine.appendSwitch('disable-background-timer-throttling');
 app.commandLine.appendSwitch('disable-features', 'CrossOriginOpenerPolicy');
 
-process.env.PORT =
-  process.argv.find(arg => arg === '-p' || arg === '--port') || process.env.PORT || '9247';
+process.env.PORT = process.env.PORT || '9247';
 global.AUTH_SERVER_URL = process.env.AUTH_SERVER_URL || 'https://postybirb-auth.azurewebsites.net';
 global.DEBUG_MODE = !!process.argv.find(arg => arg === '-d' || arg === '--develop');
 global.SERVER_ONLY_MODE = !!process.argv.find(arg => arg === '-s' || arg === '--server');
@@ -43,47 +34,39 @@ if (global.DEBUG_MODE) {
   process.env.NODE_ENV = 'production';
 }
 
-require('./app/crash-handler');
-require('./app/auth-generator');
-require('./app/settings');
-require('electron-context-menu')({
-  showInspectElement: false,
-});
+// Only after assigning globals
+(async function load() {
+  await import('./app/crash-handler');
+  await import('./app/auth-generator');
+  await import('./app/settings');
 
-let nest: any;
-let initializedOnce: boolean = false;
-let mainWindowState: WindowStateKeeper.State = null;
-let mainWindow: BrowserWindow = null;
-let backgroundAlertTimeout = null;
-let hasNotifiedAboutBackground = false;
-const icon: string = path.join(__dirname, '../build/assets/icons/minnowicon.png');
+  contextMenu({ showInspectElement: false });
 
-// Enable windows 10 notifications
-if (util.isWindows()) {
-  app.setAppUserModelId('com.lemonynade.postybirb.plus');
-}
+  let nest: any;
+  let initializedOnce: boolean = false;
+  let mainWindowState: WindowStateKeeper.State = null;
+  let mainWindow: BrowserWindow = null;
+  let backgroundAlertTimeout = null;
+  let hasNotifiedAboutBackground = false;
+  const icon: string = path.join(__dirname, '../build/assets/icons/minnowicon.png');
 
-const loader = require('../loader/loader');
-app.on('second-instance', show);
-app.on('activate', show);
-app.on('window-all-closed', () => {});
-app.on('ready', () => {
-  if (!global.SERVER_ONLY_MODE) {
-    loader.show();
+  // Enable windows 10 notifications
+  if (util.isWindows()) {
+    app.setAppUserModelId('com.lemonynade.postybirb.plus');
   }
-  nest = require('./server/main');
-  initialize();
-});
-app.on(
-  'certificate-error',
-  (
-    event: Electron.Event,
-    webContents: Electron.WebContents,
-    url: string,
-    error: string,
-    certificate: Electron.Certificate,
-    callback: (allow: boolean) => void,
-  ) => {
+
+  app.on('second-instance', show);
+  app.on('activate', show);
+  app.on('window-all-closed', () => {});
+  app.on('ready', async () => {
+    if (!global.SERVER_ONLY_MODE) {
+      loader.show();
+    }
+    console.log('App ready, loading nest');
+    nest = await import('./server/main');
+    initialize();
+  });
+  app.on('certificate-error', (_event, _webContents, _url, _error, certificate, callback) => {
     if (
       certificate.issuerName === 'postybirb.com' &&
       certificate.subject.organizations[0] === 'PostyBirb' &&
@@ -93,178 +76,177 @@ app.on(
     } else {
       callback(false);
     }
-  },
-);
-app.on('quit', () => {
-  enableSleep();
-  clearTimeout(backgroundAlertTimeout);
-  global.CHILD_PROCESS_IDS.forEach(id => process.kill(id));
-});
-
-async function initialize() {
-  if (!hasLock) {
-    return;
-  }
-  const ses = session.fromPartition('persist:name');
-  const userAgent = `PostyBirb/${app.getVersion()} (by mvdicarlo on GitHub) ${ses.getUserAgent()}`;
-
-  session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-    details.requestHeaders['User-Agent'] = userAgent;
-    callback({ cancel: false, requestHeaders: details.requestHeaders });
+  });
+  app.on('quit', () => {
+    enableSleep();
+    clearTimeout(backgroundAlertTimeout);
+    global.CHILD_PROCESS_IDS.forEach(id => process.kill(id));
   });
 
-  let shouldDisplayWindow = true;
-  if (!initializedOnce) {
-    await nest();
-    const menu = Menu.buildFromTemplate(require('./app/menu'));
-    Menu.setApplicationMenu(menu);
-    const image = buildAppImage();
-    global.tray = buildTray(image); // force to stay in memory
-    initializedOnce = true;
-    shouldDisplayWindow = global.settingsDB.getState().openWindowOnStartup;
-  }
+  async function initialize() {
+    const ses = session.fromPartition('persist:name');
+    const userAgent = `PostyBirb/${app.getVersion()} (by mvdicarlo on GitHub) ${ses.getUserAgent()}`;
 
-  if (global.SERVER_ONLY_MODE) {
-    return;
-  }
-
-  if (!shouldDisplayWindow) {
-    // observe user setting
-    loader.hide();
-    return;
-  }
-  createWindow();
-}
-
-function createWindow() {
-  if (!mainWindowState) {
-    mainWindowState = WindowStateKeeper({
-      defaultWidth: 992,
-      defaultHeight: 800,
+    session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
+      details.requestHeaders['User-Agent'] = userAgent;
+      callback({ cancel: false, requestHeaders: details.requestHeaders });
     });
-  }
 
-  mainWindow = new BrowserWindow({
-    show: false,
-    width: mainWindowState.width,
-    height: mainWindowState.height,
-    minWidth: 500,
-    minHeight: 500,
-    autoHideMenuBar: true,
-    icon,
-    title: 'PostyBirb',
-    darkTheme: nativeTheme.shouldUseDarkColors,
-    webPreferences: {
-      devTools: true,
-      allowRunningInsecureContent: false,
-      nodeIntegration: false,
-      preload: path.join(__dirname, 'app', 'preload.js'),
-      webviewTag: true,
-      contextIsolation: false,
-      spellcheck: true,
-      backgroundThrottling: false,
-    },
-  });
-
-  enableRemote(mainWindow.webContents);
-  (mainWindow as any).PORT = process.env.PORT;
-  (mainWindow as any).AUTH_ID = global.AUTH_ID;
-  (mainWindow as any).AUTH_SERVER_URL = global.AUTH_SERVER_URL;
-  (mainWindow as any).IS_DARK_THEME = nativeTheme.shouldUseDarkColors;
-  if (!global.DEBUG_MODE) {
-    mainWindowState.manage(mainWindow);
-  }
-
-  mainWindow.webContents.on('new-window', event => event.preventDefault());
-  mainWindow.on('closed', () => {
-    mainWindow = null;
-    if (global.tray && util.isWindows()) {
-      clearTimeout(backgroundAlertTimeout);
-      if (!hasNotifiedAboutBackground) {
-        backgroundAlertTimeout = setTimeout(() => {
-          hasNotifiedAboutBackground = true;
-          const notification = new Notification({
-            title: 'PostyBirb',
-            icon,
-            body: 'PostyBirb will continue in the background.',
-            silent: true,
-          });
-          notification.show();
-        }, 750);
-      }
+    let shouldDisplayWindow = true;
+    if (!initializedOnce) {
+      await nest();
+      const menu = Menu.buildFromTemplate((await import('./app/menu')).template as any);
+      Menu.setApplicationMenu(menu);
+      const image = buildAppImage();
+      global.tray = buildTray(image); // force to stay in memory
+      initializedOnce = true;
+      shouldDisplayWindow = global.settingsDB.getState().openWindowOnStartup;
     }
-  });
 
-  mainWindow.loadFile(path.join(__dirname, '../build/index.html')).then(() => {
-    loader.hide();
-    mainWindow.show();
-    if (global.DEBUG_MODE) {
-      mainWindow.webContents.openDevTools();
+    if (global.SERVER_ONLY_MODE) {
+      return;
     }
-  });
-}
 
-function buildAppImage(): Electron.NativeImage {
-  let image = nativeImage.createFromPath(icon);
-  if (util.isOSX()) {
-    image = image.resize({
-      width: 16,
-      height: 16,
-    });
-  }
-
-  return image;
-}
-
-function buildTray(image: Electron.NativeImage): Tray {
-  const trayItems: Array<Electron.MenuItem | Electron.MenuItemConstructorOptions> = [
-    {
-      label: 'Open',
-      click() {
-        show();
-      },
-    },
-    {
-      label: 'Quit',
-      click() {
-        app.quit();
-      },
-    },
-  ];
-
-  if (!util.isLinux()) {
-    trayItems.splice(0, 0, {
-      label: 'Open on startup',
-      type: 'checkbox',
-      checked: global.settingsDB.get('openOnLogin').value(),
-      click(event: any) {
-        app.setLoginItemSettings({
-          openAtLogin: event.checked,
-          path: app.getPath('exe'),
-        });
-        global.settingsDB.set('openOnLogin', event.checked).write();
-      },
-    });
-  }
-
-  const tray = new Tray(image);
-  tray.setContextMenu(Menu.buildFromTemplate(trayItems));
-  tray.setToolTip('PostyBirb');
-  tray.on('click', () => show());
-  return tray;
-}
-
-function show(): void {
-  if (!mainWindow) {
+    if (!shouldDisplayWindow) {
+      // observe user setting
+      loader.hide();
+      return;
+    }
     createWindow();
-    return;
   }
-  if (mainWindow.isMinimized()) {
-    mainWindow.restore();
-  } else {
-    mainWindow.show();
-  }
-  mainWindow.focus();
-}
 
-global.showApp = show;
+  function createWindow() {
+    if (!mainWindowState) {
+      mainWindowState = WindowStateKeeper({
+        defaultWidth: 992,
+        defaultHeight: 800,
+      });
+    }
+
+    mainWindow = new BrowserWindow({
+      show: false,
+      width: mainWindowState.width,
+      height: mainWindowState.height,
+      minWidth: 500,
+      minHeight: 500,
+      autoHideMenuBar: true,
+      icon,
+      title: 'PostyBirb',
+      darkTheme: nativeTheme.shouldUseDarkColors,
+      webPreferences: {
+        devTools: true,
+        allowRunningInsecureContent: false,
+        nodeIntegration: false,
+        webviewTag: true,
+        contextIsolation: false,
+        spellcheck: true,
+        backgroundThrottling: false,
+      },
+    });
+
+    enableRemote(mainWindow.webContents);
+    let a = 1;
+    a++;
+    console.log({ a });
+    (mainWindow as any).PORT = process.env.PORT;
+    (mainWindow as any).AUTH_ID = global.AUTH_ID;
+    (mainWindow as any).AUTH_SERVER_URL = global.AUTH_SERVER_URL;
+    (mainWindow as any).IS_DARK_THEME = nativeTheme.shouldUseDarkColors;
+    if (!global.DEBUG_MODE) {
+      mainWindowState.manage(mainWindow);
+    }
+
+    mainWindow.webContents.on('new-window', event => event.preventDefault());
+    mainWindow.on('closed', () => {
+      mainWindow = null;
+      if (global.tray && util.isWindows()) {
+        clearTimeout(backgroundAlertTimeout);
+        if (!hasNotifiedAboutBackground) {
+          backgroundAlertTimeout = setTimeout(() => {
+            hasNotifiedAboutBackground = true;
+            const notification = new Notification({
+              title: 'PostyBirb',
+              icon,
+              body: 'PostyBirb will continue in the background.',
+              silent: true,
+            });
+            notification.show();
+          }, 750);
+        }
+      }
+    });
+
+    mainWindow.loadFile(path.join(__dirname, '../build/index.html')).then(() => {
+      loader.hide();
+      mainWindow.show();
+      if (global.DEBUG_MODE) {
+        mainWindow.webContents.openDevTools();
+      }
+    });
+  }
+
+  function buildAppImage(): Electron.NativeImage {
+    let image = nativeImage.createFromPath(icon);
+    if (util.isOSX()) {
+      image = image.resize({
+        width: 16,
+        height: 16,
+      });
+    }
+
+    return image;
+  }
+
+  function buildTray(image: Electron.NativeImage): Tray {
+    const trayItems: Array<Electron.MenuItem | Electron.MenuItemConstructorOptions> = [
+      {
+        label: 'Open',
+        click() {
+          show();
+        },
+      },
+      {
+        label: 'Quit',
+        click() {
+          app.quit();
+        },
+      },
+    ];
+
+    if (!util.isLinux()) {
+      trayItems.splice(0, 0, {
+        label: 'Open on startup',
+        type: 'checkbox',
+        checked: global.settingsDB.get('openOnLogin').value(),
+        click(event: any) {
+          app.setLoginItemSettings({
+            openAtLogin: event.checked,
+            path: app.getPath('exe'),
+          });
+          global.settingsDB.set('openOnLogin', event.checked).write();
+        },
+      });
+    }
+
+    const tray = new Tray(image);
+    tray.setContextMenu(Menu.buildFromTemplate(trayItems));
+    tray.setToolTip('PostyBirb');
+    tray.on('click', () => show());
+    return tray;
+  }
+
+  function show(): void {
+    if (!mainWindow) {
+      createWindow();
+      return;
+    }
+    if (mainWindow.isMinimized()) {
+      mainWindow.restore();
+    } else {
+      mainWindow.show();
+    }
+    mainWindow.focus();
+  }
+
+  global.showApp = show;
+})();

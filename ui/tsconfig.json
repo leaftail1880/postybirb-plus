@@ -1,11 +1,7 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": [
-      "dom",
-      "dom.iterable",
-      "esnext"
-    ],
+    "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
     "esModuleInterop": true,
@@ -20,9 +16,10 @@
     "jsx": "react",
     "noImplicitAny": false,
     "experimentalDecorators": true,
-    "types": [
-      "vite/client"
-    ]
+    "types": ["vite/client"],
+    "paths": {
+      "postybirb-commons": ["../commons/index.ts"]
+    }
   },
   "include": [
     "src"

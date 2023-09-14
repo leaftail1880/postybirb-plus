@@ -1,8 +1,7 @@
-/* tslint:disable: no-console no-var-requires variable-name */
 import { app, shell } from 'electron';
-const util = require('./utils');
+import * as util from './utils';
 
-const template = [
+export const template = [
   {
     label: 'Edit',
     submenu: [
@@ -146,5 +145,3 @@ if (util.isOSX()) {
     },
   ];
 }
-
-module.exports = template;

@@ -18,7 +18,7 @@ export class SettingsStore {
     maxJPEGSizeCompression: 30,
     silentNotification: false,
     defaultTagSearchProvider: 'none',
-    proxy: ''
+    proxy: '',
   };
 
   constructor() {

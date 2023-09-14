@@ -1,4 +1,4 @@
-const { powerSaveBlocker } = require('electron');
+import { powerSaveBlocker } from 'electron';
 
 let blocker: number = null;
 

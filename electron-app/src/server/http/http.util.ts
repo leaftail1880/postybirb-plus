@@ -6,7 +6,7 @@ import CookieConverter from 'src/server/utils/cookie-converter.util';
 import setCookie from 'set-cookie-parser';
 import { Logger } from '@nestjs/common';
 import { Settings } from 'postybirb-commons';
-const FormData = require('form-data');
+import FormData from 'form-data';
 
 interface GetOptions {
   headers?: any;
@@ -28,7 +28,7 @@ export interface HttpResponse<T> {
 }
 
 // For more clear code and typechecking because global is lowdb<any>
-const settingsState: Settings = global.settingsDB.getState()
+const settingsState: Settings = global.settingsDB.getState();
 
 export default class Http {
   private static logger: Logger = new Logger(Http.name);

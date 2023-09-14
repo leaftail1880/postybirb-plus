@@ -1,4 +1,4 @@
-const Jimp = require('jimp');
+import Jimp from 'jimp';
 
 export class GifManipulator {
   static async getFrame(fileBuffer: Buffer): Promise<Buffer> {

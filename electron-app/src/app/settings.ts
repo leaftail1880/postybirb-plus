@@ -1,11 +1,10 @@
-/* tslint:disable: no-console no-var-requires */
 import { app } from 'electron';
 import { Settings } from 'postybirb-commons';
-const fs = require('fs-extra');
-const path = require('path');
-const low = require('lowdb');
-const FileSync = require('lowdb/adapters/FileSync');
-const util = require('./utils');
+import fs from 'fs-extra';
+import path from 'path';
+import low from 'lowdb';
+import FileSync from 'lowdb/adapters/FileSync';
+import * as util from './utils';
 
 const settingsPath = path.join(global.BASE_DIRECTORY, 'data', 'settings.json');
 fs.ensureFileSync(settingsPath);

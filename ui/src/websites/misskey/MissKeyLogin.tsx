@@ -1,12 +1,11 @@
 import { Button, Form, Input, message, Spin } from 'antd';
-import Axios from 'axios';
 import React from 'react';
 import ReactDOM from 'react-dom';
 import { MissKeyAccountData } from 'postybirb-commons';
 import LoginService from '../../services/login.service';
 import { LoginDialogProps } from '../interfaces/website.interface';
 
-import generator, { OAuth } from 'megalodon'
+import generator, { type OAuth } from 'megalodon'
 
 interface State extends MissKeyAccountData {
   code: string;

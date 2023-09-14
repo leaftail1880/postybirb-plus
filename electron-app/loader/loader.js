@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-var-requires */
 const { BrowserWindow } = require('electron');
 const path = require('path');
 
@@ -6,7 +7,7 @@ const width = 300;
 
 let window = null;
 
-function show() {
+export function show() {
   if (window) {
     if (window.isMinimized()) {
       window.restore();
@@ -39,12 +40,9 @@ function show() {
   }
 }
 
-function hide() {
+export function hide() {
   if (window) {
     window.destroy();
     window = null;
   }
 }
-
-module.exports.show = show;
-module.exports.hide = hide;

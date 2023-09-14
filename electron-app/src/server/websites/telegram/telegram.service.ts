@@ -1,4 +1,4 @@
-const MTProtoClass = require('@mtproto/core');
+import MTProtoClass from '@mtproto/core';
 import { MTProto } from '@mtproto/core';
 import { Injectable } from '@nestjs/common';
 import cheerio from 'cheerio';
@@ -325,7 +325,7 @@ export class Telegram extends Website {
 
     let media: InputMedia = {
       _: `inputMediaUploaded${type === 'document' ? 'Document' : 'Photo'}`,
-      spoiler
+      spoiler,
     };
 
     if (type === 'document') {
@@ -338,7 +338,7 @@ export class Telegram extends Website {
 
     const total_parts = bigFile ? { file_total_parts: parts.length } : {};
     for (let i = 0; i < parts.length; i++) {
-      await this.callApi(appId, `upload.save${bigFile ? 'Big' : ''}FilePart`,{
+      await this.callApi(appId, `upload.save${bigFile ? 'Big' : ''}FilePart`, {
         ...total_parts,
         file_id,
         file_part: i,
@@ -563,7 +563,9 @@ export class Telegram extends Website {
       }
 
       if (FileSize.MBtoBytes(10) < size && type !== FileSubmissionType.IMAGE) {
-        warnings.push(`${name} will show in channel as Unknown Track but still will be avaible for open.`);
+        warnings.push(
+          `${name} will show in channel as Unknown Track but still will be avaible for open.`,
+        );
       }
     });
 

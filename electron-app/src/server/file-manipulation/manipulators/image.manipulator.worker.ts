@@ -1,5 +1,5 @@
-const Jimp = require('jimp');
-const fs = require('fs-extra');
+import Jimp from 'jimp';
+import fs from 'fs-extra';
 
 // Clean up self after 30 minutes (since no process should really be used that long)
 setTimeout(() => {

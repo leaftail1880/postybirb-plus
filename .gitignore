@@ -1,5 +1,4 @@
-dist-ui/
-dist-electron/
+out/
 
 # Logs
 logs

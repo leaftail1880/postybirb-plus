@@ -15,7 +15,6 @@
     "megalodon": "^6.1.0",
     "mobx": "^5.15.7",
     "mobx-react": "^6.3.1",
-    "postybirb-commons": "file:../commons",
     "react": "^16.14.0",
     "react-beautiful-dnd": "^12.2.0",
     "react-cropper": "2.1.8",
@@ -23,8 +22,7 @@
     "react-hotkeys": "^2.0.0",
     "react-router-dom": "^5.2.0",
     "sanitize-html": "^1.27.5",
-    "socket.io": "^2.4.1",
-    "uuid": "^3.3.3"
+    "socket.io": "^2.4.1"
   },
   "devDependencies": {
     "@types/jest": "24.0.22",

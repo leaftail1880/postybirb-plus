@@ -1,8 +1,7 @@
-/* tslint:disable: no-console no-var-requires variable-name */
 import { app } from 'electron';
-const fs = require('fs-extra');
-const path = require('path');
-const nanoid = require('nanoid');
+import fs from 'fs-extra';
+import path from 'path';
+import { nanoid } from 'nanoid';
 
 fs.ensureDirSync(path.join(app.getPath('userData'), 'data'));
 

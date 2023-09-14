@@ -1,9 +1,14 @@
-
-
-export default {
+/**
+ * @type {import("tailwindcss").Config}
+ */
+module.exports = {
   corePlugins: {
-    preflight: false
+    preflight: false,
   },
+  purge: [
+    './src/**/*.html',
+    './src/**/*.tsx',
+  ],
   theme: {
     extend: {
       colors: {
@@ -12,17 +17,17 @@ export default {
         success: '#52c41a',
         warning: '#faad14',
         danger: '#f5222d',
-        disabled: 'rgba(0, 0, 0, .25)'
-      }
+        disabled: 'rgba(0, 0, 0, .25)',
+      },
     },
     container: {
-      center: true
+      center: true,
     },
     cursor: {
       'zoom-in': 'zoom-in',
-      'pointer': 'pointer'
-    }
+      pointer: 'pointer',
+    },
   },
   variants: {},
-  plugins: []
+  plugins: [],
 };
