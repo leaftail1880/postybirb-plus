@@ -1,0 +1,38 @@
+name: scripts
+on:
+  workflow_dispatch:
+
+  push:
+    branches:
+      - main
+    tags:
+      - '!*' # Do not execute on tags
+    paths:
+      - electron-app/**
+      - commons/**
+      - ui/**
+      - package-lock.json
+      - .github/workflows/ci.yml
+      - tsconfig.json
+
+  pull_request:
+
+env:
+  CI: true
+
+jobs:
+  test:
+    name: Run TSC
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4.1.7
+
+      - uses: actions/setup-node@v4.0.3
+        with:
+          node-version: 22
+
+      - run: NODE_OPTIONS=--openssl-legacy-provider npm ci
+
+      - run: cd electron-app && npm run build
+
+ 
